@@ -11,8 +11,9 @@ import ServiceManagement
 /// bool: the user can revoke it from System Settings at any time.
 @MainActor @Observable
 final class LoginItem {
-    private(set) var status: SMAppService.Status = SMAppService.mainApp.status
-    private(set) var lastError: String?
+    private(set) var state = LoginItemState(status: SMAppService.mainApp.status)
+
+    var status: SMAppService.Status { state.status }
 
     /// `requiresApproval` counts as on: the registration exists and only
     /// waits for the user's OK, so showing "off" would invite a second click.
@@ -20,11 +21,12 @@ final class LoginItem {
     var needsApproval: Bool { status == .requiresApproval }
 
     var statusText: String? {
-        LoginItemAdvice.message(status: status, appURL: Bundle.main.bundleURL, error: lastError)
+        LoginItemAdvice.message(status: status, appURL: Bundle.main.bundleURL, error: state.error)
     }
 
+    /// Re-reads the system status; an old error clears once it has changed.
     func refresh() {
-        status = SMAppService.mainApp.status
+        state.update(status: SMAppService.mainApp.status)
     }
 
     func setEnabled(_ enabled: Bool) {
@@ -34,11 +36,10 @@ final class LoginItem {
             } else {
                 try SMAppService.mainApp.unregister()
             }
-            lastError = nil
+            state.succeeded(status: SMAppService.mainApp.status)
         } catch {
-            lastError = error.localizedDescription
+            state.failed(error.localizedDescription, status: SMAppService.mainApp.status)
         }
-        refresh()
     }
 
     func openSystemSettings() {

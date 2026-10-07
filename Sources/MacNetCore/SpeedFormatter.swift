@@ -59,9 +59,8 @@ public enum SpeedFormatter {
         scaled(sanitized(bitsPerSecond) / 1_000_000, units: ["Mbps", "Gbps", "Tbps"], steps: detailedSteps)
     }
 
-    /// Data totals such as "1.2 GB".
+    /// Data totals such as "1.2 GB", from "0.0 KB" up.
     public static func bytes(_ count: UInt64) -> String {
-        guard count > 0 else { return "0 KB" }
         let size = scaled(Double(count) / 1000, units: ["KB", "MB", "GB", "TB"], steps: compactSteps)
         return "\(size.number) \(size.unit)"
     }

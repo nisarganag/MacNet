@@ -1,7 +1,8 @@
 import MacNetCore
 import SwiftUI
 
-/// The last minute of traffic as one mirrored waveform: upload rises above
+/// The last 60 readings of traffic — a minute at the default 1 s interval,
+/// five at 5 s — as one mirrored waveform: upload rises above
 /// the centre line and download falls below it — the same arrangement as the
 /// menu bar label (↑ on top, ↓ below) and the readouts beside the graph.
 struct ThroughputGraph: View {

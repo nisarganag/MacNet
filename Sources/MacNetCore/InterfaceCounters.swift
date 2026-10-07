@@ -7,19 +7,21 @@ import Foundation
 /// whose byte counters are 32-bit and wrap every 4 GB — a few minutes of a
 /// fast download. `if_msghdr2` carries `if_data64`, which does not.
 public enum InterfaceCounters {
-    public static func snapshot(filter: (String) -> Bool = InterfaceFilter.counts) -> CounterSnapshot {
-        CounterSnapshot(counters: read(filter: filter), uptime: ProcessInfo.processInfo.systemUptime)
+    /// Nil when the kernel couldn't be read — distinct from a successful
+    /// read that simply has no counted interfaces.
+    public static func snapshot(filter: (String) -> Bool = InterfaceFilter.counts) -> CounterSnapshot? {
+        read(filter: filter).map { CounterSnapshot(counters: $0, uptime: ProcessInfo.processInfo.systemUptime) }
     }
 
-    private static func read(filter: (String) -> Bool) -> [String: InterfaceCounter] {
+    private static func read(filter: (String) -> Bool) -> [String: InterfaceCounter]? {
         var mib: [Int32] = [CTL_NET, PF_ROUTE, 0, 0, NET_RT_IFLIST2, 0]
         var length = 0
-        guard sysctl(&mib, UInt32(mib.count), nil, &length, nil, 0) == 0, length > 0 else { return [:] }
+        guard sysctl(&mib, UInt32(mib.count), nil, &length, nil, 0) == 0, length > 0 else { return nil }
         // Headroom for an interface appearing between the two calls, which
         // would otherwise fail the second one with ENOMEM.
         length += length / 8
         var buffer = [UInt8](repeating: 0, count: length)
-        guard sysctl(&mib, UInt32(mib.count), &buffer, &length, nil, 0) == 0 else { return [:] }
+        guard sysctl(&mib, UInt32(mib.count), &buffer, &length, nil, 0) == 0 else { return nil }
 
         var counters: [String: InterfaceCounter] = [:]
         buffer.withUnsafeBytes { raw in

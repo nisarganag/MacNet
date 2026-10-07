@@ -90,8 +90,12 @@ struct SpeedCase: Sendable, CustomTestStringConvertible {
 }
 
 @Suite struct ByteTotalFormatting {
+    /// Zero and a few stray bytes read the same way, in the same style as
+    /// every other total.
     @Test(arguments: [
-        (UInt64(0), "0 KB"),
+        (UInt64(0), "0.0 KB"),
+        (UInt64(49), "0.0 KB"),
+        (UInt64(50), "0.1 KB"),
         (UInt64(1_234_567), "1.2 MB"),
         (UInt64(5_000_000_000), "5.0 GB"),
         (UInt64(45_000_000), "45 MB"),

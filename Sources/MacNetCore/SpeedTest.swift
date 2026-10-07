@@ -34,6 +34,9 @@ public enum SpeedTestError: Error, Equatable, LocalizedError {
     case tool(code: Int, domain: String)
     /// The tool is missing or couldn't be launched.
     case unavailable
+    /// The tool died mid-test — crashed, or killed by something other than
+    /// the user's Cancel.
+    case interrupted
     case noOutput
     case malformed
 
@@ -44,6 +47,8 @@ public enum SpeedTestError: Error, Equatable, LocalizedError {
             return NSError(domain: domain, code: code).localizedDescription
         case .unavailable:
             return "macOS's networkQuality tool couldn't be started."
+        case .interrupted:
+            return "The speed test stopped unexpectedly. Try again."
         case .noOutput:
             return "The speed test finished without a result."
         case .malformed:

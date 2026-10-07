@@ -13,8 +13,11 @@ public struct NetworkSampler: Sendable {
 
     /// The first snapshot only becomes the baseline — counters are lifetime
     /// totals, so diffing against nothing would report everything since boot.
+    /// A failed read (nil) keeps the last rate and the last good baseline, so
+    /// the next good read covers the gap instead of losing its traffic.
     @discardableResult
-    public mutating func ingest(_ snapshot: CounterSnapshot) -> Throughput {
+    public mutating func ingest(_ snapshot: CounterSnapshot?) -> Throughput {
+        guard let snapshot else { return current }
         defer { previous = snapshot }
         guard let previous else { return .zero }
         current = ThroughputCalculator.between(previous, snapshot)

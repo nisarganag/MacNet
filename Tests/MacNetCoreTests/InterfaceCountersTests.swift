@@ -4,20 +4,20 @@ import Testing
 @testable import MacNetCore
 
 @Suite struct SystemInterfaceCounters {
-    @Test func defaultFilterExcludesLoopback() {
-        let counters = InterfaceCounters.snapshot().counters
+    @Test func defaultFilterExcludesLoopback() throws {
+        let counters = try #require(InterfaceCounters.snapshot()).counters
         #expect(counters["lo0"] == nil)
         #expect(counters.keys.allSatisfy(InterfaceFilter.counts))
     }
 
-    @Test func customFilterSelectsExactlyWhatItAccepts() {
-        let counters = InterfaceCounters.snapshot { $0 == "lo0" }.counters
+    @Test func customFilterSelectsExactlyWhatItAccepts() throws {
+        let counters = try #require(InterfaceCounters.snapshot { $0 == "lo0" }).counters
         #expect(Array(counters.keys) == ["lo0"])
     }
 
-    @Test func countersAndClockNeverGoBackwards() {
-        let first = InterfaceCounters.snapshot { _ in true }
-        let second = InterfaceCounters.snapshot { _ in true }
+    @Test func countersAndClockNeverGoBackwards() throws {
+        let first = try #require(InterfaceCounters.snapshot { _ in true })
+        let second = try #require(InterfaceCounters.snapshot { _ in true })
         #expect(second.uptime >= first.uptime)
         for (name, before) in first.counters {
             guard let after = second.counters[name] else { continue }
@@ -30,9 +30,9 @@ import Testing
     /// traffic this test generates itself must appear in lo0's sent bytes.
     @Test func loopbackTrafficShowsUpInTheCounters() throws {
         let loopbackOnly: (String) -> Bool = { $0 == "lo0" }
-        let before = try #require(InterfaceCounters.snapshot(filter: loopbackOnly).counters["lo0"])
+        let before = try #require(InterfaceCounters.snapshot(filter: loopbackOnly)?.counters["lo0"])
         try sendLoopbackUDP(totalBytes: 200_000)
-        let after = try #require(InterfaceCounters.snapshot(filter: loopbackOnly).counters["lo0"])
+        let after = try #require(InterfaceCounters.snapshot(filter: loopbackOnly)?.counters["lo0"])
         #expect(after.sent - before.sent >= 200_000)
         #expect(after.received - before.received >= 200_000)
     }

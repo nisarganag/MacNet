@@ -1,7 +1,20 @@
+import MacNetCore
+import Observation
 import SwiftUI
 
-enum PanelPage {
-    case monitor, settings
+/// Which page the open panel shows. An object rather than view state so the
+/// panel's Escape handling (in AppKit) can step back out of Settings.
+@MainActor @Observable
+final class PanelNavigation {
+    var page: PanelPage
+
+    init(page: PanelPage) {
+        self.page = page
+    }
+
+    func show(_ page: PanelPage) {
+        withAnimation(.smooth(duration: 0.32)) { self.page = page }
+    }
 }
 
 /// The panel's root: the monitor page, with settings sliding in over it.
@@ -11,30 +24,19 @@ struct PanelView: View {
     let tester: SpeedTester
     let preferences: Preferences
     let loginItem: LoginItem
+    let navigation: PanelNavigation
     let quit: () -> Void
-    @State private var page: PanelPage
     @Environment(\.colorScheme) private var colorScheme
-
-    init(monitor: NetworkMonitor, connection: ConnectionMonitor, tester: SpeedTester,
-         preferences: Preferences, loginItem: LoginItem, page: PanelPage, quit: @escaping () -> Void) {
-        self.monitor = monitor
-        self.connection = connection
-        self.tester = tester
-        self.preferences = preferences
-        self.loginItem = loginItem
-        self.quit = quit
-        _page = State(initialValue: page)
-    }
 
     var body: some View {
         ZStack(alignment: .top) {
-            switch page {
+            switch navigation.page {
             case .monitor:
                 MonitorPage(monitor: monitor, connection: connection, tester: tester,
-                            preferences: preferences, openSettings: { show(.settings) }, quit: quit)
+                            preferences: preferences, openSettings: { navigation.show(.settings) }, quit: quit)
                     .transition(.move(edge: .leading).combined(with: .opacity))
             case .settings:
-                SettingsPage(preferences: preferences, loginItem: loginItem, back: { show(.monitor) })
+                SettingsPage(preferences: preferences, loginItem: loginItem, back: { navigation.show(.monitor) })
                     .transition(.move(edge: .trailing).combined(with: .opacity))
             }
         }
@@ -42,9 +44,5 @@ struct PanelView: View {
         .frame(width: Theme.panelSize.width, height: Theme.panelSize.height, alignment: .top)
         .clipShape(.rect(cornerRadius: Theme.cornerRadius))
         .panelSurface(preferences.glassStyle, dark: colorScheme == .dark)
-    }
-
-    private func show(_ page: PanelPage) {
-        withAnimation(.smooth(duration: 0.32)) { self.page = page }
     }
 }

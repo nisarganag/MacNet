@@ -11,8 +11,10 @@ public struct InterfaceCounter: Equatable, Sendable {
     }
 }
 
-/// Every counted interface's counters at one instant. `uptime` is a monotonic
-/// clock (seconds since boot), so wall-clock changes cannot skew a rate.
+/// Every counted interface's counters at one instant. `uptime` is the time
+/// the Mac has been awake since boot: monotonic, so clock changes can't skew
+/// a rate, and frozen during sleep, so the first rate after waking averages
+/// over awake time and stays bounded rather than reading as a spike.
 public struct CounterSnapshot: Equatable, Sendable {
     public var counters: [String: InterfaceCounter]
     public var uptime: TimeInterval

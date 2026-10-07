@@ -12,7 +12,7 @@
   <img alt="platform macOS 26+" src="https://img.shields.io/badge/platform-macOS%2026%2B-lightgrey">
   <img alt="universal binary" src="https://img.shields.io/badge/arch-universal%20(arm64%20%2B%20x86__64)-blue">
   <img alt="Swift 6.0" src="https://img.shields.io/badge/Swift-6.0-orange">
-  <img alt="65 tests passing" src="https://img.shields.io/badge/tests-65%20passing-success">
+  <img alt="71 tests passing" src="https://img.shields.io/badge/tests-71%20passing-success">
   <img alt="MIT license" src="https://img.shields.io/badge/license-MIT-green">
 </p>
 
@@ -27,7 +27,7 @@ MacNet lives only in the menu bar. It shows your current upload speed above your
 
 Click it to open a Liquid Glass panel with:
 
-- **Live traffic** — upload and download speed with a mirrored graph of the last minute.
+- **Live traffic** — upload and download speed with a mirrored graph of the last 60 readings (one minute at the default 1-second interval).
 - **Data used since launch.**
 - **Internet speed test** — download, upload, latency and Apple's responsiveness rating, measured with macOS's built-in `networkQuality` tool against Apple's servers.
 - **Settings** — start at login, update interval (1, 2 or 5 seconds), bytes (`K/s`) or bits (`Kb/s`), and frosted or clear glass.

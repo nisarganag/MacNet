@@ -62,10 +62,6 @@ final class SpeedTester {
         task?.cancel()
     }
 
-    func dismissFailure() {
-        if case .failed = state { state = .idle }
-    }
-
     private static let resultKey = "lastSpeedTest"
 
     private func save() {

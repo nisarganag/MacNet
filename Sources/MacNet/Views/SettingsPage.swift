@@ -17,7 +17,7 @@ struct SettingsPage: View {
                 }
                 .buttonStyle(.glass)
                 .buttonBorderShape(.circle)
-                .keyboardShortcut(.cancelAction)
+                .help("Back (Esc)")
                 .accessibilityLabel("Back")
                 Text("Settings")
                     .font(.system(size: 15, weight: .semibold))
@@ -102,8 +102,11 @@ struct SettingsPage: View {
                     .foregroundStyle(.secondary)
             }
             Spacer()
-            Link("Release notes", destination: AppInfo.releases)
-                .font(.system(size: 12))
+            VStack(alignment: .trailing, spacing: 3) {
+                Link("GitHub", destination: AppInfo.repository)
+                Link("Release notes", destination: AppInfo.releases)
+            }
+            .font(.system(size: 12))
         }
         .glassCard()
     }

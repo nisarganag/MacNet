@@ -28,6 +28,7 @@ import Testing
     /// summary on stdout is read at the same time for Apple's rating.
     @Test func readsTheOutputFileAndTheSummary() async throws {
         let dir = try scratchDirectory()
+        defer { try? FileManager.default.removeItem(at: dir) }
         let tool = try fakeTool("""
             cp '\(try fixture("nq-success.json").path)' "${1#-c}"
             echo 'Responsiveness: Medium (50.000 milliseconds | 1200 RPM)'
@@ -40,6 +41,7 @@ import Testing
 
     @Test func reportsFailuresTheToolWritesToItsJSON() async throws {
         let dir = try scratchDirectory()
+        defer { try? FileManager.default.removeItem(at: dir) }
         let tool = try fakeTool("cp '\(try fixture("nq-error.json").path)' \"${1#-c}\"", in: dir)
         await #expect(throws: SpeedTestError.tool(code: -1003, domain: "NSURLErrorDomain")) {
             try await NetworkQualityRunner(executable: tool).run()
@@ -48,10 +50,23 @@ import Testing
 
     @Test func exitingWithoutWritingAnythingIsNoOutput() async throws {
         let dir = try scratchDirectory()
+        defer { try? FileManager.default.removeItem(at: dir) }
         let tool = try fakeTool("exit 1", in: dir)
         await #expect(throws: SpeedTestError.noOutput) {
             try await NetworkQualityRunner(executable: tool).run()
         }
+    }
+
+    /// Only the user's Cancel is a cancellation. A tool that crashed or was
+    /// killed from outside must say so, not quietly return to idle.
+    @Test func aToolKilledBySomethingElseIsReported() async throws {
+        let dir = try scratchDirectory()
+        defer { try? FileManager.default.removeItem(at: dir) }
+        let tool = try fakeTool("kill -9 $$", in: dir)
+        await #expect(throws: SpeedTestError.interrupted) {
+            try await NetworkQualityRunner(executable: tool).run()
+        }
+        #expect(!(SpeedTestError.interrupted.errorDescription ?? "").isEmpty)
     }
 
     @Test func missingToolIsUnavailable() async {
@@ -66,6 +81,7 @@ import Testing
     /// orphaned networkQuality would keep saturating the link for 30 s.
     @Test func cancellingKillsTheProcess() async throws {
         let dir = try scratchDirectory()
+        defer { try? FileManager.default.removeItem(at: dir) }
         let pidFile = dir.appendingPathComponent("pid")
         let tool = try fakeTool("echo $$ > '\(pidFile.path)'\nexec sleep 30", in: dir)
 

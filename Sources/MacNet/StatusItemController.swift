@@ -9,10 +9,12 @@ private let log = Logger(subsystem: "com.nisarganag.macnet", category: "panel")
 @MainActor
 final class StatusItemController: NSObject {
     private let statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength)
-    private let makePanelContent: (PanelPage) -> AnyView
+    private let makePanelContent: (PanelNavigation) -> AnyView
     /// Nil whenever the panel is closed — see `openPanel`.
     private var panel: GlassPanel?
+    private var navigation: PanelNavigation?
     private var dismissMonitors: [Any] = []
+    private var activationObserver: NSObjectProtocol?
     private var shownLabel: Label?
 
     private struct Label: Equatable {
@@ -21,7 +23,7 @@ final class StatusItemController: NSObject {
         let style: UnitStyle
     }
 
-    init(makePanelContent: @escaping (PanelPage) -> AnyView) {
+    init(makePanelContent: @escaping (PanelNavigation) -> AnyView) {
         self.makePanelContent = makePanelContent
         super.init()
         guard let button = statusItem.button else { return }
@@ -61,7 +63,9 @@ final class StatusItemController: NSObject {
     func openPanel(_ page: PanelPage) {
         guard panel == nil, let button = statusItem.button else { return }
         let panel = GlassPanel(size: Theme.panelSize)
-        let host = NSHostingView(rootView: makePanelContent(page))
+        let navigation = PanelNavigation(page: page)
+        self.navigation = navigation
+        let host = NSHostingView(rootView: makePanelContent(navigation))
         host.frame = NSRect(origin: .zero, size: Theme.panelSize)
         // `wantsLayer` first: `layer` is nil until it is set. The window is a
         // rectangle; only this mask keeps its corners from showing around
@@ -92,6 +96,7 @@ final class StatusItemController: NSObject {
         panel?.orderOut(nil)
         panel?.contentView = nil
         panel = nil
+        navigation = nil
         statusItem.button?.highlight(false)
     }
 
@@ -121,12 +126,16 @@ final class StatusItemController: NSObject {
         panel.setFrameOrigin(origin)
     }
 
-    /// Closes on a click anywhere else, or Escape — what a menu does.
+    /// Closes on a click anywhere else, Escape, or another app coming to the
+    /// front — what a menu does.
     ///
     /// The global monitor sees clicks in other apps; the local one sees
     /// clicks in this app outside the panel. Clicks on the status item itself
     /// are left to `togglePanel`: closing here first would make the toggle
-    /// read "closed" and immediately reopen it.
+    /// read "closed" and immediately reopen it. The activation observer
+    /// catches what no click does — Cmd-Tab, and the panel's own links and
+    /// "Open Login Items" bringing another app forward — so the panel never
+    /// floats over the window it just opened.
     private func startDismissMonitors() {
         stopDismissMonitors()
         let clicks: NSEvent.EventTypeMask = [.leftMouseDown, .rightMouseDown, .otherMouseDown]
@@ -147,15 +156,39 @@ final class StatusItemController: NSObject {
         }
         if let escape = NSEvent.addLocalMonitorForEvents(matching: .keyDown, handler: { [weak self] event in
             guard event.keyCode == 53 else { return event }
-            MainActor.assumeIsolated { self?.closePanel("escape") }
+            MainActor.assumeIsolated { self?.escape() }
             return nil
         }) {
             dismissMonitors.append(escape)
+        }
+        activationObserver = NSWorkspace.shared.notificationCenter.addObserver(
+            forName: NSWorkspace.didActivateApplicationNotification, object: nil, queue: .main
+        ) { [weak self] note in
+            let app = note.userInfo?[NSWorkspace.applicationUserInfoKey] as? NSRunningApplication
+            let pid = app?.processIdentifier
+            MainActor.assumeIsolated {
+                guard pid != ProcessInfo.processInfo.processIdentifier else { return }
+                self?.closePanel("another app became active")
+            }
+        }
+    }
+
+    /// Steps back out of Settings first; closes from the top level.
+    private func escape() {
+        guard let navigation else { return }
+        if let previous = navigation.page.afterEscape {
+            navigation.show(previous)
+        } else {
+            closePanel("escape")
         }
     }
 
     private func stopDismissMonitors() {
         dismissMonitors.forEach(NSEvent.removeMonitor)
         dismissMonitors.removeAll()
+        if let activationObserver {
+            NSWorkspace.shared.notificationCenter.removeObserver(activationObserver)
+            self.activationObserver = nil
+        }
     }
 }

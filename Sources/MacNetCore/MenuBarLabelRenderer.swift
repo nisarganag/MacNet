@@ -33,7 +33,16 @@ public enum MenuBarLabelRenderer {
         }
     }
 
+    /// Measured once per unit style: the columns depend only on fonts and
+    /// unit names, not on the values being shown.
+    private static let measured: [UnitStyle: Metrics] = Dictionary(
+        uniqueKeysWithValues: UnitStyle.allCases.map { ($0, measure(style: $0)) })
+
     static func metrics(style: UnitStyle) -> Metrics {
+        measured[style] ?? measure(style: style)
+    }
+
+    private static func measure(style: UnitStyle) -> Metrics {
         Metrics(
             arrowWidth: max(width(of: "↑", font: arrowFont), width(of: "↓", font: arrowFont)),
             // Digits are monospaced in this font and the compact formatter

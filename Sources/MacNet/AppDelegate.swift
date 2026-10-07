@@ -28,9 +28,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         log.notice("MacNet started: \(AppInfo.versionDescription, privacy: .public)")
 
         connection.start()
-        statusItem = StatusItemController { [unowned self] page in
+        statusItem = StatusItemController { [unowned self] navigation in
             AnyView(PanelView(monitor: monitor, connection: connection, tester: speedTester,
-                              preferences: preferences, loginItem: loginItem, page: page,
+                              preferences: preferences, loginItem: loginItem, navigation: navigation,
                               quit: { NSApp.terminate(nil) }))
         }
         monitor.onSample = { [weak self] rate in

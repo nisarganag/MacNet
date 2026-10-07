@@ -26,7 +26,12 @@ public struct NetworkQualityRunner: Sendable {
         } onCancel: {
             child.terminate()
         }
-        if child.wasKilled { throw CancellationError() }
+        // Killed by a signal: a cancellation only if the user cancelled. A
+        // crash, or a kill from outside, has to be reported, not swallowed.
+        if child.wasKilled {
+            if Task.isCancelled { throw CancellationError() }
+            throw SpeedTestError.interrupted
+        }
 
         let json = (try? Data(contentsOf: output)) ?? Data()
         return try NetworkQualityParser.parse(json: json, summary: summary, date: Date())
