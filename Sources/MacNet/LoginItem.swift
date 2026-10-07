@@ -1,3 +1,5 @@
+import Foundation
+import MacNetCore
 import Observation
 import ServiceManagement
 
@@ -18,12 +20,7 @@ final class LoginItem {
     var needsApproval: Bool { status == .requiresApproval }
 
     var statusText: String? {
-        if let lastError { return lastError }
-        switch status {
-        case .requiresApproval: return "Allow MacNet in System Settings ▸ Login Items."
-        case .notFound: return "Move MacNet to the Applications folder to use this."
-        default: return nil
-        }
+        LoginItemAdvice.message(status: status, appURL: Bundle.main.bundleURL, error: lastError)
     }
 
     func refresh() {

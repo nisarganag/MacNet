@@ -6,6 +6,16 @@
 
 <p align="center">Live upload and download speed in your Mac's menu bar — compact, with a Liquid Glass panel and a built-in speed test.</p>
 
+<p align="center">
+  <a href="https://github.com/nisarganag/MacNet/releases/latest">
+    <img alt="latest release" src="https://img.shields.io/github/v/release/nisarganag/MacNet?color=brightgreen&label=release"></a>
+  <img alt="platform macOS 26+" src="https://img.shields.io/badge/platform-macOS%2026%2B-lightgrey">
+  <img alt="universal binary" src="https://img.shields.io/badge/arch-universal%20(arm64%20%2B%20x86__64)-blue">
+  <img alt="Swift 6.0" src="https://img.shields.io/badge/Swift-6.0-orange">
+  <img alt="65 tests passing" src="https://img.shields.io/badge/tests-65%20passing-success">
+  <img alt="MIT license" src="https://img.shields.io/badge/license-MIT-green">
+</p>
+
 ---
 
 MacNet lives only in the menu bar. It shows your current upload speed above your download speed in a label about 45 points wide — narrow enough to leave room on a 13-inch MacBook Air with a notch:
@@ -79,3 +89,7 @@ It never creates commits. Release notes are the commit subjects since the previo
 ## License
 
 [MIT](LICENSE)
+
+---
+
+<p align="center">Made with ❤️ by Nisarga</p>
