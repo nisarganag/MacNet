@@ -1,0 +1,50 @@
+import Observation
+import ServiceManagement
+
+/// Start at login through `SMAppService` rather than a LaunchAgent plist, so
+/// MacNet appears by name in System Settings ▸ General ▸ Login Items — where
+/// people actually look to turn it off.
+///
+/// The switch always reflects the system's real status, never a remembered
+/// bool: the user can revoke it from System Settings at any time.
+@MainActor @Observable
+final class LoginItem {
+    private(set) var status: SMAppService.Status = SMAppService.mainApp.status
+    private(set) var lastError: String?
+
+    /// `requiresApproval` counts as on: the registration exists and only
+    /// waits for the user's OK, so showing "off" would invite a second click.
+    var isEnabled: Bool { status == .enabled || status == .requiresApproval }
+    var needsApproval: Bool { status == .requiresApproval }
+
+    var statusText: String? {
+        if let lastError { return lastError }
+        switch status {
+        case .requiresApproval: return "Allow MacNet in System Settings ▸ Login Items."
+        case .notFound: return "Move MacNet to the Applications folder to use this."
+        default: return nil
+        }
+    }
+
+    func refresh() {
+        status = SMAppService.mainApp.status
+    }
+
+    func setEnabled(_ enabled: Bool) {
+        do {
+            if enabled {
+                try SMAppService.mainApp.register()
+            } else {
+                try SMAppService.mainApp.unregister()
+            }
+            lastError = nil
+        } catch {
+            lastError = error.localizedDescription
+        }
+        refresh()
+    }
+
+    func openSystemSettings() {
+        SMAppService.openSystemSettingsLoginItems()
+    }
+}

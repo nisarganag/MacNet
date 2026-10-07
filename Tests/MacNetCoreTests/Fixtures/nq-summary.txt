@@ -1,0 +1,5 @@
+==== SUMMARY ====
+Uplink capacity: 50.510 Mbps
+Downlink capacity: 62.963 Mbps
+Responsiveness: Low (313.417 milliseconds | 191 RPM)
+Idle Latency: 40.142 milliseconds | 1494 RPM

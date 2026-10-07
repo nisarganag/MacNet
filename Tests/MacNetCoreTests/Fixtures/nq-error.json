@@ -1,0 +1,14 @@
+
+{
+  "cli_options" : [
+    "-c",
+    "-C",
+    "https://invalid.invalid/config"
+  ],
+  "draft_version" : 8,
+  "end_date" : "2026-10-07 16:45:34.664",
+  "error_code" : -1003,
+  "error_domain" : "NSURLErrorDomain",
+  "os_version" : "Version 27.0.1 (Build 26A434)",
+  "start_date" : "2026-10-07 16:45:34.622"
+}
